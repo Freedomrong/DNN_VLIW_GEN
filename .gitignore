@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# Keep this file
+!.gitignore
+
+# Keep C++ source files
+!*.cpp
+
+# Keep Makefile
+!Makefile
