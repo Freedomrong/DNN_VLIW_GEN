@@ -328,9 +328,9 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
 			GlobalBuffer_DDR_length = 48 * 48 * 4;  //per 64Bytes 384*31   //需要pad=1, 31+pad， pad只补充在最开始一层
 		}
-		else if (count >= 33) {
+		else if (count >= 33) { // 每次只读需要的数据
 			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = 0xa8000000 + (long long)(count - 33) * 48 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_source_address = 0xa7000000 + (long long)(count - 33) * 48 * 48 * 64;							//3x3的卷积核必须一次读入
 			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
 			GlobalBuffer_DDR_length = 48 * 48;  //per 64Bytes 384*31 
 		}
@@ -523,23 +523,25 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 
 		// if (count == 1 || count == 5) {
 		if (count <= 32) {
-			if (count % 4 == 1) {
+			if (count == 1) {
 				GlobalBuffer_WaitMMU = 1;
+			}
+			else {
+				GlobalBuffer_WaitMMU = 0; // 前32条指令，输入图像在SRAM中，直接算下一条
+			}
+			if (count % 4 == 1) {
 				GlobalBuffer_source_address = GlobalBuffer_first;
 				GlobalBuffer_length = 48*48;
 			}
 			else if (count % 4 == 2) {
-				GlobalBuffer_WaitMMU = 1;
 				GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
 				GlobalBuffer_length = 48*48;
 			}
 			else if (count % 4 == 3) {
-				GlobalBuffer_WaitMMU = 1;
 				GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
 				GlobalBuffer_length = 48*48;
 			}
 			else if (count % 4 == 0) {
-				GlobalBuffer_WaitMMU = 1;
 				GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
 				GlobalBuffer_length = 48*48;
 			}
@@ -678,7 +680,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 
 
 		// -------------
-				if (count == 1 || count == 9) {  // 第一条指令，从DDR读权重,全部读上来
+		if (count == 1 || count == 9) {  // 第一条指令，从DDR读权重,全部读上来
 			WeightCache_DDR_enable = 1;
 			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
 			WeightCache_DDR_aim_address = WeightCache_first;
@@ -720,17 +722,40 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	else if (conv_num == 4) // n=4 or n=8
 	{
 		if (count <= 32) {
-			if (count == 1) {  // 第一条指令，从DDR读权重,全部读上来
-				WeightCache_DDR_enable = 1;
-				WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
-				WeightCache_DDR_aim_address = WeightCache_first;
-				WeightCache_DDR_length = 3*3*256; // 3*3*256
-			} else {
-				WeightCache_DDR_enable = 0;
-				WeightCache_DDR_source_address = 0;
-				WeightCache_DDR_aim_address = 0;
-				WeightCache_DDR_length = 0;
-			}
+			// if (count == 1) {  // 第一条指令，从DDR读权重,全部读上来
+			// 	WeightCache_DDR_enable = 1;
+			// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
+			// 	WeightCache_DDR_aim_address = WeightCache_first;
+			// 	WeightCache_DDR_length = 3*3*4*128; // 3*3*256
+			// 	// 256 filter, 8次， 1个filter是3x3x128； 先读四个filter， 4x4= 16； 前16，读一次。后16读一次。
+			// } 
+			// else if (count == 17) {
+			// 	WeightCache_DDR_enable = 1;
+			// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + 3*3*64*4*128;
+			// 	WeightCache_DDR_aim_address = WeightCache_first;
+			// 	WeightCache_DDR_length = 3*3*4*128; // 3*3*256
+			// }
+			// else {
+			// 	WeightCache_DDR_enable = 0;
+			// 	WeightCache_DDR_source_address = 0;
+			// 	WeightCache_DDR_aim_address = 0;
+			// 	WeightCache_DDR_length = 0;
+			// }
+
+			// if (count >= 1 && count <= 32) {
+			const long long base_stride = 3 * 3 * 64;
+			const long long block_stride = base_stride * 256; // 4路轮转步长
+			const long long group_stride = base_stride * 32;  // 每4个count后向后平移
+
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first
+				+ block_stride * ((count - 1) % 4)
+				+ group_stride * ((count - 1) / 4);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 3 * 3 * 32; // 3*3*256
+			// }
+
+
 		}
 		else {
 			WeightCache_DDR_enable = 0;
@@ -827,11 +852,13 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count % m == 0) { Psum_enable = 1; } // 当 count 为 2说明一个输出组（32个通道）的计算已经完成
 		else { Psum_enable = 0; }  
 	}
-	else if (conv_num == 4 || conv_num == 5)
+	else if (conv_num == 4)
 	{
 		if (conv_num == 4 && count > 32) { Psum_enable = 0; } // 池化阶段不累加
 		else if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 5, 9... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
 		else { Psum_enable = 1; }
+
+		// 1： 0， 2： 1， 3， 1，4， 1 
 	}
 	else
 	{
@@ -944,17 +971,54 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	}
 	else if (conv_num == 4)
 	{
-		if (count > 32) { Bias_enable = 0; }
+		if (count > 32) { 
+			Bias_enable = 0; 
+			Bias_source_address = 0;
+		}
 		else {
+			// if (count % 4 == 0) {
+			// 	Bias_enable = 1;
+			// 	int channel_out_step = (count - 1) / 4 + 1; 
+			// 	Bias_source_address = Bias_addr_first + channel_out_step - 1;
+			// }
+			// else {
+			// 	Bias_enable = 0;
+			// 	Bias_source_address = 0;
+			// }
+
 			if (count % 4 == 0) {
 				Bias_enable = 1;
-				int channel_out_step = (count - 1) / 4 + 1; 
-				Bias_source_address = Bias_addr_first + channel_out_step - 1;
+				if (count == 4) {
+					Bias_source_address = Bias_addr_first;
+				}
+				else if (count == 8) {
+					Bias_source_address = Bias_addr_first + 1;
+				}
+				else if (count == 12) {
+					Bias_source_address = Bias_addr_first + 2;
+				}
+				else if (count == 16) {
+					Bias_source_address = Bias_addr_first + 3;
+				}
+				else if (count == 20) {
+					Bias_source_address = Bias_addr_first + 4;
+				}
+				else if (count == 24) {
+					Bias_source_address = Bias_addr_first + 5;
+				}
+				else if (count == 28) {
+					Bias_source_address = Bias_addr_first + 6;
+				}
+				else if (count == 32) {
+					Bias_source_address = Bias_addr_first + 7;
+				}
 			}
 			else {
 				Bias_enable = 0;
 				Bias_source_address = 0;
 			}
+
+
 		}
 	}
 	else if (conv_num == 5)
@@ -1149,22 +1213,69 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count > 32) // 池化阶段：写回最终 24x24 结果到片上BRAM;
 		{
 			Compute_Result_enable = 1;
-			int pool_out_step = count - 32; 
-			long long group_offset = (long long)(pool_out_step - 1) * 24 * 24 * 64;
-			Compute_Result_source_address = 0xc0000000 + group_offset; 
-			Compute_Result_length = 576; // 24*24
+			Compute_Result_source_address = 0xc0000000 + 0x80000 + (count - 33) * 24 * 24 * 64; 
+			Compute_Result_length = 24*24; // 48*48
+			
+			// int pool_out_step = count - 32; 
+			// long long group_offset = (long long)(pool_out_step - 1) * 24 * 24 * 64;
+			// Compute_Result_source_address = 0xc0000000 + group_offset; 
+			// Compute_Result_length = 576; // 24*24
 		}
 		else if (count % 4 == 0) // 卷积阶段：结果暂存到 DDR 0x003000000
 		{
-			Compute_Result_enable = 1;
-			int channel_out_step = (count - 1) / m + 1;  //  m = 4
-			long long group_offset = (long long)(channel_out_step - 1) * 48 * 48 * 64;
-			Compute_Result_source_address = compute_result_first + group_offset; 
-			Compute_Result_length = 2304; // 48*48
+			// Compute_Result_enable = 1;
+			// int channel_out_step = (count - 1) / m + 1;  //  m = 4
+			// long long group_offset = (long long)(channel_out_step - 1) * 48 * 48 * 64;
+			// Compute_Result_source_address = compute_result_first + group_offset; 
+			// Compute_Result_length = 2304; // 48*48
+
+			if (count == 4) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 8) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 12) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 2; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 16) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 3; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 20) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 4; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 24) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 5; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 28) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 6; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+			else if (count == 32) {
+				Compute_Result_enable = 1;
+				Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * 7; 
+				Compute_Result_length = 48*48; // 48*48
+			}
+
 		}
 		else
 		{
 			Compute_Result_enable = 0;
+			Compute_Result_source_address = 0;
+			Compute_Result_length = 0;
 		}
 	}
 	else if (conv_num == 5)
@@ -1520,7 +1631,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
 
-	else if (conv_num == 4 || conv_num == 5)
+	else if (conv_num == 4)
 	{
 		if (conv_num == 4 && count > 32) {
 			Global_CMD_weight_rd_addr_cmd_base = 0;
@@ -1533,22 +1644,22 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			// 	Global_CMD_weight_rd_addr_cmd_base = 9; 
 			// }
 
-			Global_CMD_weight_rd_addr_cmd_base = (count - 1) * 9;
+			Global_CMD_weight_rd_addr_cmd_base = 0;
 		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//15.Psum_module_enable and Bias_module_enable
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (conv_num == 0 || conv_num == 1 || conv_num == 2 || conv_num == 3 || conv_num == 4 || conv_num == 5) {
-		if (conv_num == 4 && count > 32) {
-			Psum_module_enable = 0;
-		} else {
-			Psum_module_enable = 1;
-		}
-	} else {
+	if (conv_num == 4 && count > 32)
+	{
 		Psum_module_enable = 0;
 	}
+	else
+	{
+		Psum_module_enable = 1;
+	}
+	
 
 	// if (conv_num == 0 || conv_num == 1 || conv_num == 2 || conv_num == 3 || conv_num == 4 || conv_num == 5) {
 	// 	if (conv_num == 4 && count > 32) {
