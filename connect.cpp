@@ -46,7 +46,7 @@ long long  Count_DDR_Globalbuffer_first(int count)
 	}
     else if (count == 4)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A3000000;
+		GlobalBuffer_DDR_source_address = 0x0A6000000;
 	}
 	else
 	{
@@ -151,15 +151,15 @@ long long Count_compute_result_first(int count)
 	}
 	else if (count == 3)
 	{
-		compute_rseult_first = 0x0A3000000;
+		compute_rseult_first = 0x0A6000000;
 	}
 	else if (count == 4)
 	{
-		compute_rseult_first = 0x0A4000000;
+		compute_rseult_first = 0x0A7000000;
 	}
 	else if (count == 5)
 	{
-		compute_rseult_first = 0x0A5000000;
+		compute_rseult_first = 0x0A8000000;
 	}
 	return compute_rseult_first;
 }

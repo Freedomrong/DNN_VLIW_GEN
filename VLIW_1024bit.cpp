@@ -281,7 +281,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_enable = 1;
 			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 96 * 96 * 64;   // 这个29是怎么计算的，0-29，刚好3x3，这次从30开始取
 			// ddr ： 所有像素的前32 ，所有像素的后32通道存； 这一条，后32通道，所有要加像素的前32作为偏移
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first + 96 * 63 * 64;
+			// GlobalBuffer_DDR_aim_address = GlobalBuffer_first + 96 * 63 * 64;
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first + 0x80000;
 			GlobalBuffer_DDR_length = 96 * 63;  
 		}  // 1 + 2
 		
@@ -306,7 +307,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_enable = 1;
 			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + (96 * 96 * 64) + 61 * 96 * 64;   // 这个29是怎么计算的，0-29，刚好3x3，这次从30开始取
 			// ddr ： 所有像素的前32 ，所有像素的后32通道存； 这一条，后32通道，所有要加像素的前32作为偏移
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first + + 96 * (96 - 61) * 64;
+			// GlobalBuffer_DDR_aim_address = GlobalBuffer_first + + 96 * (96 - 61) * 64;
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first + 0x80000;
 			GlobalBuffer_DDR_length = 96 * (96 - 61);  
 		}  // 1 + 2
 
@@ -462,7 +464,9 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 		else if (count == 2) {
 			GlobalBuffer_WaitMMU = 1;
-			GlobalBuffer_source_address = GlobalBuffer_first + 96 * 63 * 64;
+			// GlobalBuffer_source_address = GlobalBuffer_first + 96 * 63 * 64;  // GlobalBuffer_DDR_aim_address
+			GlobalBuffer_source_address = GlobalBuffer_first + 0x80000;
+
 			GlobalBuffer_length = 96 * 63;
 		}
 		else if (count == 3 || count == 5 || count == 7) {
@@ -472,7 +476,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 		else if (count == 4 || count == 6 || count == 8) {
 			GlobalBuffer_WaitMMU = 0;
-			GlobalBuffer_source_address = GlobalBuffer_first + 96 * 63 * 64;
+			// GlobalBuffer_source_address = GlobalBuffer_first + 96 * 63 * 64;
+			GlobalBuffer_source_address = GlobalBuffer_first + 0x80000;
 			GlobalBuffer_length = 96 * 63;
 		}
 
@@ -484,7 +489,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 		else if (count == 10) {
 			GlobalBuffer_WaitMMU = 1;
-			GlobalBuffer_source_address = GlobalBuffer_first + 96 * (96 - 61) * 64;
+			// GlobalBuffer_source_address = GlobalBuffer_first + 96 * (96 - 61) * 64;
+			GlobalBuffer_source_address = GlobalBuffer_first + 0x80000;
 			GlobalBuffer_length = 96 * (96 - 61);
 		}
 		else if (count == 11 || count == 13 || count == 15) {
@@ -494,7 +500,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 		else if (count == 12 || count == 14 || count == 16) {
 			GlobalBuffer_WaitMMU = 0;
-			GlobalBuffer_source_address = GlobalBuffer_first + 96 * (96 - 61) * 64;
+			// GlobalBuffer_source_address = GlobalBuffer_first + 96 * (96 - 61) * 64;
+			GlobalBuffer_source_address = GlobalBuffer_first + 0x80000;
 			GlobalBuffer_length = 96 * (96 - 61);
 		}
 	}
@@ -596,17 +603,119 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	}
 	else if (conv_num == 3) // 3x3卷积核, n=4
 	{
-		if (count == 1) {  // 第一条指令，从DDR读权重,全部读上来
+		// if (count == 1) {  // 第一条指令，从DDR读权重,全部读上来
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 1152; // 3*3*128
+		// } else {
+		// 	WeightCache_DDR_enable = 0;
+		// 	WeightCache_DDR_source_address = 0;
+		// 	WeightCache_DDR_aim_address = 0;
+		// 	WeightCache_DDR_length = 0;
+		// }
+
+		// block 1 & 
+		// block 2
+		// if (count == 1 || count == 9) {  // 第一条指令，从DDR读权重,全部读上来
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// } 
+		// else if (count == 2 || count == 10) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 128;
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+		// else if (count == 3 || count == 5 || count == 7 || count == 11 || count == 13 || count == 15) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 32 * (count / 2);
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+		// else if (count == 4 || count == 6 || count == 8 || count == 12 || count == 14 || count == 16) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = (DDR_WeightCacheBuffer_first + (3*3*64) * 128) + (3*3*64) * 32 * ((count-1) / 2);
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+		// 为了避免出错，我可以考虑，读需要的权重上来。不用一次性读那么多；
+		// 根据以往的推断，权重在DDR的存储是，
+		// filter 1 : 前32， filte 2: 前32， filter 3: 前32， filter 4: 前32
+		// filter 1 : 后32， filte 2: 后32， filter 3: 后32， filter 4: 后32
+		// 我们在第三层的执行流程是：
+		// count 1: fmap @ filter 1(前32); count 2: fmap @ filter 1(后32) ；两者的结果累加输出, 结果写回。
+		// count 3: fmap @ filter 2(前32); count 4: fmap @ filter 2(后32) ；两者的结果累加输出, 结果写回。
+		// count 5: fmap @ filter 3(前32); count 6: fmap @ filter 3(后32) ；两者的结果累加输出, 结果写回。
+		// count 7: fmap @ filter 4(前32); count 8: fmap @ filter 4(后32) ；两者的结果累加输出, 结果写回。
+
+		// if (count == 1 || count == 9) {  // 第一条指令，从DDR读权重,全部读上来
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// } 
+		// else if (count == 2 || count == 10) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 128;
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+		// else if (count == 3 || count == 5 || count == 7 || count == 11 || count == 13 || count == 15) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 32 * ((count%8) / 2);
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+		// else if (count == 4 || count == 6 || count == 8 || count == 12 || count == 14 || count == 16) {
+		// 	WeightCache_DDR_enable = 1;
+		// 	WeightCache_DDR_source_address = (DDR_WeightCacheBuffer_first + (3*3*64) * 128) + (3*3*64) * 32 * (((count%8)-1) / 2);
+		// 	WeightCache_DDR_aim_address = WeightCache_first;
+		// 	WeightCache_DDR_length = 288; // 3*3*128*2
+		// }
+
+
+		// -------------
+				if (count == 1 || count == 9) {  // 第一条指令，从DDR读权重,全部读上来
 			WeightCache_DDR_enable = 1;
 			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first;
 			WeightCache_DDR_aim_address = WeightCache_first;
-			WeightCache_DDR_length = 1152; // 3*3*128
-		} else {
-			WeightCache_DDR_enable = 0;
-			WeightCache_DDR_source_address = 0;
-			WeightCache_DDR_aim_address = 0;
-			WeightCache_DDR_length = 0;
+			WeightCache_DDR_length = 288; // 3*3*128*2
+		} 
+		else if (count == 2 || count == 10) {
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 128;
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; // 3*3*128*2
 		}
+		else if (count == 3 || count == 5 || count == 7 || count == 11 || count == 13 || count == 15) {
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first + (3*3*64) * 32 * ((count%8) / 2);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; // 3*3*128*2
+		}
+		else if (count == 4 || count == 6 || count == 12 || count == 14) {
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = (DDR_WeightCacheBuffer_first + (3*3*64) * 128) + (3*3*64) * 32 * (((count%8)-1) / 2);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; // 3*3*128*2
+		}
+		else if (count == 8) {
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = (DDR_WeightCacheBuffer_first + (3*3*64) * 128) + (3*3*64) * 32 * (3);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; // 3*3*128*2
+		}
+		else if (count == 16) {
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = (DDR_WeightCacheBuffer_first + (3*3*64) * 128) + (3*3*64) * 32 * (3);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; // 3*3*128*2
+		}
+
+
 	}
 	else if (conv_num == 4) // n=4 or n=8
 	{
@@ -666,11 +775,6 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			WeightCache_source_address = 0;
 			WeightCache_length = 0;
 		}
-
-		// WeightCache_enable = 1;
-		// WeightCache_WaitMMU = 1;
-		// WeightCache_source_address = WeightCache_first;
-		// WeightCache_length = WeightCache_DDR_length;
 	}
 	else if (filters_size[conv_num] == 1)
 	{
@@ -719,13 +823,9 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	}
 	else if (conv_num == 3)
 	{
-		if (count == 1) {
-			Psum_enable = 0;
-		}
-		else if (count == 2)
-		{
-			Psum_enable = 0;
-		}
+		// m = 2
+		if (count % m == 0) { Psum_enable = 1; } // 当 count 为 2说明一个输出组（32个通道）的计算已经完成
+		else { Psum_enable = 0; }  
 	}
 	else if (conv_num == 4 || conv_num == 5)
 	{
@@ -744,7 +844,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	} 
 	else if (conv_num == 3)
 	{
-		if (count % m == 0) { Psum_next = 1; } // 当 count 为 2说明一个输出组（32个通道）的计算已经完成
+		if (count % m == 0) { Psum_next = 1; } // 结果写回DDR
 		else { Psum_next = 0; }               
 	}
 	else if (conv_num == 4)  // 待定
@@ -1408,14 +1508,16 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	}
 	else if (conv_num == 3)
 	{
-		if (count == 1) 
-		{
-			Global_CMD_weight_rd_addr_cmd_base = 0;
-		}
-		else if (count == 2)
-		{
-			Global_CMD_weight_rd_addr_cmd_base = 9;  // 待定
-		}
+		// if (count == 1) 
+		// {
+		// 	Global_CMD_weight_rd_addr_cmd_base = 0;
+		// }
+		// else if (count == 2)
+		// {
+		// 	Global_CMD_weight_rd_addr_cmd_base = 9;  // 待定
+		// }
+
+		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
 
 	else if (conv_num == 4 || conv_num == 5)
@@ -1463,11 +1565,18 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Bias_module_enable = 1;
 	}
 	else if (conv_num == 3) {
-		if (count % 2 == 1) {
-			Bias_module_enable = 0;
+		// if (count % 2 == 1) {
+		// 	Bias_module_enable = 0;
+		// }
+		// else {
+		// 	Bias_module_enable = 1;
+		// }
+
+		if (count % 2 == 0) {
+			Bias_module_enable = 1;
 		}
 		else {
-			Bias_module_enable = 1;
+			Bias_module_enable = 0;
 		}
 	}
 	else if (conv_num == 4)
@@ -1535,7 +1644,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// }
 
 	// if (conv_num == 1 && count == 13) {
-	// if (conv_num == 2 && count == 8) {
+	// if (conv_num == 3 && count == 2) {
 	// 	PCIE_START = 1;
 	// }
 	// else {	

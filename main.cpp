@@ -50,8 +50,19 @@ int main()
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only3_0319.coe");
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123_0320_v2.coe");
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123_0320_v3.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123_0320_v3.coe");
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only3_0320_v2.coe");
+	
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234_0321_v3.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only4_0320_v1.coe");
+
+	//ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234_0321_v3.coe");
+
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234_0321_v4_guo_sim.coe");
+
+
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only4_0323_v1.coe");
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234_0325_v7_guo_sim.coe");
 	// ----------------------
 
 	// 768x768模型各层指令数 (14层)
@@ -65,9 +76,11 @@ int main()
 	// for (count = 0; count < 1; count++)  // Layer 0
 	// for (count = 0; count < 2; count++)     // Layer 1
 	// for (count = 1; count < 2; count++)     // Layer 1
-	for (count = 0; count < 3; count++)
+	// for (count = 0; count < 4; count++)
+
+	// for (count = 3; count < 4; count++)
 	// for (count = 2; count < 3; count++)     // Layer 1
-	//for (count = 0; count < 4; count++)     // Layer 1
+	for (count = 0; count < 4; count++)     // Layer 1
 	{
 		int k = kstorge[count];
 		int m = (original[count] % 32 == 0 ? original[count] / 32 : original[count] / 32+1);
@@ -109,6 +122,7 @@ int main()
 		else if (count == 3)  // layer 3 ：  输入：96x96x64，输出：48x48x128（3x3 + pooling）
 		{
 			for (int i = 1; i <= 16; i++)  //  16
+			// for (int i = 1; i <= 2; i++)  //  16
 			{
 				cout << i << " ";
 				VLIW = VLIW_1024bit(i, m, n, k, count);
