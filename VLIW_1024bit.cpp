@@ -460,6 +460,23 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_length = 0;
 		}
 	}
+	else if (conv_num == 8)  // layer 8 : 输入：24x24x256，输出：24x24x512 (3x3)
+	{
+		//m = 8, n = 16； 因为输入24x24x8 < 16384，故每次搬运8个通道，连续搬运16次完成512个输出通道的计算
+		if (count == 1) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 24 * 8;  
+		}
+		else {
+			GlobalBuffer_DDR_enable = 0;
+			GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = 0;
+			GlobalBuffer_DDR_length = 0;
+		}
+
+	}
 	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -854,6 +871,52 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_length = 24*24;
 		}
 	}
+	else if (conv_num == 8) {
+		// ori code
+		if (count == 1) {
+			GlobalBuffer_WaitMMU = 1;
+		}
+		else {
+			GlobalBuffer_WaitMMU = 0; // 前8条指令，输入图像在SRAM中，直接算下一条
+		}
+
+		if (count % 8 == 1) {
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 2) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 3) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 2;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 4) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 3;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 5) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 4;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 6) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 5;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 7) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 6;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 0) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 7;
+			GlobalBuffer_length = 24*24;
+		}
+		else { 
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 24*24;
+		}
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//3.从WeightCache中读fmap进入Compute
@@ -1136,7 +1199,27 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			WeightCache_DDR_aim_address = 0;
 			WeightCache_DDR_length = 0;
 		}
+	}
+	else if (conv_num== 8) // conv3x3卷积核, m = 8, n = 16
+	{
+		if (count >= 1 && count <= m*n) { // 8个为一组
+			const long long base_stride = 3 * 3 * 64;
+			const long long block_stride = base_stride * 512; // 组内步长
+			const long long group_stride = base_stride * 32;  // 组间步长
 
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first
+				+ block_stride * ((count - 1) % m)
+				+ group_stride * ((count - 1) / m);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; 
+		}
+		else {
+			WeightCache_DDR_enable = 0;
+			WeightCache_DDR_source_address = 0;
+			WeightCache_DDR_aim_address = 0;
+			WeightCache_DDR_length = 0;
+		}
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1234,17 +1317,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 
 		// 1： 0， 2： 1， 3， 1，4， 1 
 	}
-	else if (conv_num == 5)
-	{
-		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
-		else { Psum_enable = 1; }
-	}
-	else if (conv_num == 6)
-	{
-		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
-		else { Psum_enable = 1; }
-	}
-	else if (conv_num == 7)
+	else if (conv_num == 5 || conv_num == 6|| conv_num == 7 || conv_num == 8)
 	{
 		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
 		else { Psum_enable = 1; }
@@ -1269,21 +1342,21 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		else if (count % m == 0) { Psum_next = 1; } // 当 count 为 4, 8, 12... 时，说明一个输出组（32个通道）的计算已经完成
 		else { Psum_next = 0; }
 	}
-	else if (conv_num == 5)
+	else if (conv_num == 5 || conv_num == 6|| conv_num == 7 || conv_num == 8)
 	{
 		if (count % m == 0) { Psum_next = 1; } 
 		else { Psum_next = 0; }
 	}
-	else if (conv_num == 6)
-	{
-		if (count % m == 0) { Psum_next = 1; } 
-		else { Psum_next = 0; }
-	}
-	else if (conv_num == 7)
-	{
-		if (count % m == 0) { Psum_next = 1; } 
-		else { Psum_next = 0; }
-	}
+	// else if (conv_num == 6)
+	// {
+	// 	if (count % m == 0) { Psum_next = 1; } 
+	// 	else { Psum_next = 0; }
+	// }
+	// else if (conv_num == 7)
+	// {
+	// 	if (count % m == 0) { Psum_next = 1; } 
+	// 	else { Psum_next = 0; }
+	// }
 	else
 	{
 		Psum_next = 0;
@@ -1503,6 +1576,64 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count % 32 == 0) {
 			Bias_enable = 1;
 			Bias_source_address = Bias_addr_first + (count / 32 - 1);
+		}
+		else {
+			Bias_enable = 0;
+			Bias_source_address = 0;
+		}
+	}
+	else if (conv_num == 8)
+	{
+		if (count % 8 == 0) {
+			Bias_enable = 1;
+			if (count == 8) {
+				Bias_source_address = Bias_addr_first;
+			}
+			else if (count == 16) {
+				Bias_source_address = Bias_addr_first + 1;
+			}
+			else if (count == 24) {
+				Bias_source_address = Bias_addr_first + 2;
+			}
+			else if (count == 32) {
+				Bias_source_address = Bias_addr_first + 3;
+			}
+			else if (count == 40) {
+				Bias_source_address = Bias_addr_first + 4;
+			}
+			else if (count == 48) {
+				Bias_source_address = Bias_addr_first + 5;
+			}
+			else if (count == 56) {
+				Bias_source_address = Bias_addr_first + 6;
+			}
+			else if (count == 64) {
+				Bias_source_address = Bias_addr_first + 7;
+			}
+			else if (count == 72) {
+				Bias_source_address = Bias_addr_first + 8;
+			}
+			else if (count == 80) {
+				Bias_source_address = Bias_addr_first + 9;
+			}
+			else if (count == 88) {
+				Bias_source_address = Bias_addr_first + 10;
+			}
+			else if (count == 96) {
+				Bias_source_address = Bias_addr_first + 11;
+			}
+			else if (count == 104) {
+				Bias_source_address = Bias_addr_first + 12;
+			}
+			else if (count == 112) {
+				Bias_source_address = Bias_addr_first + 13;
+			}
+			else if (count == 120) {
+				Bias_source_address = Bias_addr_first + 14;
+			}
+			else if (count == 128) {
+				Bias_source_address = Bias_addr_first + 15;
+			}
 		}
 		else {
 			Bias_enable = 0;
@@ -1886,6 +2017,20 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Compute_Result_length = 0;
 		}
 	}
+	else if (conv_num == 8)
+	{
+		if (count % 8 == 0) {
+			int n = count / 8 - 1;
+			Compute_Result_enable = 1;
+			Compute_Result_source_address = compute_result_first + 24 * 24 * 64 * n;
+			Compute_Result_length = 24 * 24;
+		}
+		else {
+			Compute_Result_enable = 0;
+			Compute_Result_source_address = 0;
+			Compute_Result_length = 0;
+		}
+	}
 	else
 	{
 		Compute_Result_enable = 0;
@@ -1982,6 +2127,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
 	}
+	else if (conv_num == 8)
+	{
+		Global_CMD_pooling = 0;
+		Global_CMD_pooling_length = 0;
+	}
 	else {
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
@@ -2071,7 +2221,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Global_CMD_pad_type = 15;
 		}
 	}
-	else if (conv_num == 5 || conv_num == 6)
+	else if (conv_num == 5 || conv_num == 6 || conv_num == 8)
 	{
 		Global_CMD_pad = 1;
 		Global_CMD_pad_type = 15;
@@ -2209,7 +2359,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_width = 48;
 		Global_CMD_high = 48;
 	}
-	else if (conv_num == 5 || conv_num == 6 || conv_num == 7)
+	else if (conv_num == 5 || conv_num == 6 || conv_num == 7 || conv_num == 8)
 	{
 		Global_CMD_width = 24;
 		Global_CMD_high = 24;
@@ -2282,7 +2432,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	{
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
-	else if (conv_num == 7)
+	else if (conv_num == 7 || conv_num == 8)
 	{
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
@@ -2350,7 +2500,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			
 		}
 	}
-	else if (conv_num == 5)
+	else if (conv_num == 5 || conv_num == 8)
 	{
 		if (count % 8 == 0) {
 			Bias_module_enable = 1;
@@ -2464,7 +2614,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Full instruction debug dump (only for conv_num == 5)
 	// if (conv_num == 6 && (count %16 == 0)) {
-	if (conv_num == 7 && (count <= 32)) {
+	if (conv_num == 8 && (count <= 32)) {
 		cout << "\n[INST DBG] conv_num=" << conv_num
 			 << " count=" << count
 			 << " m=" << m

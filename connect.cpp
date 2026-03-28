@@ -20,9 +20,9 @@ int original[14] = { 32, 32, 32, 64, 128, 256, 512, 1024, 256, 512, 256, 128, 25
 int filters[14] = { 32, 32, 64, 128, 256, 512, 1024, 256, 512, 21, 128, 256, 256, 21 };
 int filters_size[14] = { 1, 3, 3, 3, 3, 3, 3, 1, 3, 1, 1, 3, 3, 1 };
 // fl: 是否需要移位 (fl_length>0则为1)
-int fl[14] =        { 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0 };
+int fl[14] =           { 0, 1, 1, 1, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0 };
 // fl_length: 当前层数据1 - 前一层数据3
-int fl_length[14] = { 0, 1, 2, 2, 1, 0, 1, 1, 0, 0, 3, 0, 0, 0 };
+int fl_length[14] =    { 0, 1, 2, 2, 1, 0, 1, 1, 0, 0, 3, 0, 0, 0 };
 
 long long  Count_DDR_Globalbuffer_first(int count)
 {
@@ -59,6 +59,10 @@ long long  Count_DDR_Globalbuffer_first(int count)
 	else if (count == 7)
 	{
 		GlobalBuffer_DDR_source_address = 0x0A3000000;
+	}
+	else if (count == 8)
+	{
+		GlobalBuffer_DDR_source_address = 0x0A4000000;
 	}
 	else
 	{
@@ -179,9 +183,12 @@ long long Count_compute_result_first(int count)
 	}
 	else if (count == 7)
 	{
-		compute_rseult_first = 0x0A4000000;
+		compute_rseult_first = 0x0A4000000;  // result save
 	}
-
+	else if (count == 8)
+	{
+		compute_rseult_first = 0x0A5000000;
+	}
 	return compute_rseult_first;
 }
 /*8bit*/
