@@ -66,9 +66,13 @@ int main()
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345_0326_v1.coe");
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456_0326_v6.coe");
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456_0326_v10.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456_0326_v10.coe");
+
+
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567_0328_v1.coe");
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only7_0327_v2.coe");
+	// ofstream file("VLIW_768x768_504_len1024_test_address_0x80_inst_only7_0328_v3.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
@@ -88,7 +92,7 @@ int main()
 	// for (count = 2; count < 3; count++)     // Layer 1
 	// for (count = 0; count < 4; count++)     // Layer 1
 	// for (count = 0; count < 5; count++)        // Layer 1
-	for (count = 0; count < 6; count++)        // Layer 1
+	for (count = 0; count < 7; count++)        // Layer 1
 	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];

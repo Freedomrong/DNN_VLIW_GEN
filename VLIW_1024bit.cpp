@@ -349,67 +349,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		// GlobalBuffer_DDR_length = 0;
 
 		// ori plan
-		// if (count == 1) {
-		// 	GlobalBuffer_DDR_enable = 1;
-		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
-		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-		// 	GlobalBuffer_DDR_length = 24 * 24 * 8;  //per 64Bytes 384*31   //需要pad=1, 31+pad， pad只补充在最开始一层
-		// }
-		// else {
-		// 	GlobalBuffer_DDR_enable = 0;
-		// 	GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
-		// 	GlobalBuffer_DDR_aim_address = 0;
-		// 	GlobalBuffer_DDR_length = 0;
-		// }
-
-		// every time read, Luis add, 0326
-		if ((count%8) == 1) {
+		if (count == 1) {
 			GlobalBuffer_DDR_enable = 1;
 			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
 			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31   //需要pad=1, 31+pad， pad只补充在最开始一层
-		}
-		else if ((count%8) == 2) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 3) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 2;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 4) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 3;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 5) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 4;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 6) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 5;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 7) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 6;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
-		}
-		else if ((count%8) == 0) { // 每次只读需要的数据
-			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 7;							//3x3的卷积核必须一次读入
-			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
-			GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+			GlobalBuffer_DDR_length = 24 * 24 * 8;  //per 64Bytes 384*31   //需要pad=1, 31+pad， pad只补充在最开始一层
 		}
 		else {
 			GlobalBuffer_DDR_enable = 0;
@@ -417,6 +361,62 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_aim_address = 0;
 			GlobalBuffer_DDR_length = 0;
 		}
+
+		// // every time read, Luis add, 0326
+		// if ((count%8) == 1) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31   //需要pad=1, 31+pad， pad只补充在最开始一层
+		// }
+		// else if ((count%8) == 2) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 3) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 2;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 4) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 3;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 5) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 4;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 6) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 5;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 7) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 6;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else if ((count%8) == 0) { // 每次只读需要的数据
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 24 * 64 * 7;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 24 * 24;  //per 64Bytes 384*31 
+		// }
+		// else {
+		// 	GlobalBuffer_DDR_enable = 0;
+		// 	GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = 0;
+		// 	GlobalBuffer_DDR_length = 0;
+		// }
 
 	}
 	else if (conv_num == 6)  // layer 6 : 输入：24x24x512，输出：24x24x1024（3x3）
@@ -629,54 +629,55 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		// 	GlobalBuffer_source_address = GlobalBuffer_first + ((count % 8) - 1) * 24*24*64; // 每次都要搬图到pe
 		// }
 
-		// if (count == 1) {
-		// 	GlobalBuffer_WaitMMU = 1;
-		// }
-		// else {
-		// 	GlobalBuffer_WaitMMU = 0; // 前8条指令，输入图像在SRAM中，直接算下一条
-		// }
+		// ori code
+		if (count == 1) {
+			GlobalBuffer_WaitMMU = 1;
+		}
+		else {
+			GlobalBuffer_WaitMMU = 0; // 前8条指令，输入图像在SRAM中，直接算下一条
+		}
 
-		// if (count % 8 == 1) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 2) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 3) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 2;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 4) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 3;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 5) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 4;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 6) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 5;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 7) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 6;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else if (count % 8 == 0) {
-		// 	GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 7;
-		// 	GlobalBuffer_length = 24*24;
-		// }
-		// else { 
-		// 	GlobalBuffer_source_address = GlobalBuffer_first;
-		// 	GlobalBuffer_length = 24*24;
-		// }
+		if (count % 8 == 1) {
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 2) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 3) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 2;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 4) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 3;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 5) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 4;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 6) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 5;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 7) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 6;
+			GlobalBuffer_length = 24*24;
+		}
+		else if (count % 8 == 0) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 7;
+			GlobalBuffer_length = 24*24;
+		}
+		else { 
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 24*24;
+		}
 
-		GlobalBuffer_WaitMMU = 1;
-		GlobalBuffer_length = 24*24; // 32通道，搬8次
-		GlobalBuffer_source_address = GlobalBuffer_first;
-		GlobalBuffer_length = 576;
+		// GlobalBuffer_WaitMMU = 1;
+		// GlobalBuffer_length = 24*24; // 32通道，搬8次
+		// GlobalBuffer_source_address = GlobalBuffer_first;
+		// GlobalBuffer_length = 576;
 	}
 	else if (conv_num == 6) {
 		if (count == 1) {
@@ -992,7 +993,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	}
 	else if (conv_num == 6)
 	{
-		if (count >= 1 && count <= 128) { // 8个为一组
+		if (count >= 1 && count <= m*n) { // 8个为一组
 			const long long base_stride = 3 * 3 * 64;
 			const long long block_stride = base_stride * 1024; // 组内步长
 			const long long group_stride = base_stride * 32;  // 组间步长
