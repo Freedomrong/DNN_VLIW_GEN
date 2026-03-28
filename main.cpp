@@ -63,8 +63,13 @@ int main()
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only4_0323_v1.coe");
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234_0325_v7_guo_sim.coe");
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345_0326_v1.coe");
-	// ----------------------
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345_0326_v1.coe");
+
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456_0326_v6.coe");
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456_0326_v10.coe");
+
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only7_0327_v2.coe");
+	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
 	int count;
@@ -82,7 +87,9 @@ int main()
 	// for (count = 3; count < 4; count++)
 	// for (count = 2; count < 3; count++)     // Layer 1
 	// for (count = 0; count < 4; count++)     // Layer 1
-	for (count = 0; count < 5; count++)        // Layer 1
+	// for (count = 0; count < 5; count++)        // Layer 1
+	for (count = 0; count < 6; count++)        // Layer 1
+	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];
 		int m = (original[count] % 32 == 0 ? original[count] / 32 : original[count] / 32+1);
@@ -143,7 +150,20 @@ int main()
 				add++;
 			}
 		}
-		else if (count == 5)  // layer 5
+		else if (count == 5)  // layer 5 : 输入：24x24x256，输出：24x24x512（3x3）
+		{
+			for (int i = 1; i <= m * n; i++)  
+			{
+				// m=8, n=16, 128 instructions
+				cout << i << " ";
+				VLIW = VLIW_1024bit(i, m, n, k, count);
+				file << VLIW << ",";
+				add++;
+			}
+		}
+		// -------------------------------------
+		// layer 7 : 输入：24x24x512，输出：24x24x1024（3x3）
+		if (count == 6)  // layer 6 : 输入：24x24x512，输出：24x24x1024（3x3）
 		{
 			for (int i = 1; i <= m * n; i++)  
 			{

@@ -48,6 +48,14 @@ long long  Count_DDR_Globalbuffer_first(int count)
 	{
 		GlobalBuffer_DDR_source_address = 0x0A6000000;
 	}
+	else if (count == 5)
+	{
+		GlobalBuffer_DDR_source_address = 0x0A9000000;
+	}
+	else if (count == 6)
+	{
+		GlobalBuffer_DDR_source_address = 0x0A8000000;
+	}
 	else
 	{
 		GlobalBuffer_DDR_source_address = 0x0A0000000;
@@ -160,6 +168,10 @@ long long Count_compute_result_first(int count)
 	else if (count == 5)
 	{
 		compute_rseult_first = 0x0A8000000;
+	}
+	else if (count == 6)
+	{
+		compute_rseult_first = 0x0A3000000;
 	}
 	return compute_rseult_first;
 }
