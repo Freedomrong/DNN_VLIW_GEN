@@ -22,7 +22,7 @@ int main()
 	//                   C0  C1  C2  C3  C4   C5   C6   C7    C8   C9  C10 C11a C11b C12
 	int filters[14] = { 16, 32, 64, 128, 256, 512, 1024, 256, 512, 21, 128, 256, 256, 21 };    // 输出通道
 	int filters_size[14] = { 1, 3, 3, 3, 3, 3, 3, 1, 3, 1, 1, 3, 3, 1 };  // 卷积核大小
-    //                       0，1，2，3，4，5，6，7，8，9，10，11a，11b，12
+    //                       0，1，2，3，4， 5，6，7，8， 9，10，11a，11b，12
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x00_v1.coe");
 
 	// ----------------------
@@ -72,10 +72,12 @@ int main()
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567_0328_v1.coe");
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678_0328_v1.coe");
 
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789_0328_v1.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789_0328_v1.coe");
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only7_0327_v2.coe");
 	// ofstream file("VLIW_768x768_504_len1024_test_address_0x80_inst_only7_0328_v3.coe");
+
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910_0328_v1.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
@@ -98,7 +100,7 @@ int main()
 	// for (count = 0; count < 7; count++)        // Layer 1
 	// for (count = 0; count < 8; count++)        // Layer 1
 
-	for (count = 0; count < 9; count++)        // Layer 1
+	for (count = 0; count < 10; count++)        // Layer 1
 	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];
@@ -206,7 +208,21 @@ int main()
 				add++;
 			}
 		}
-		
+
+		// -------------------------------------
+		else if (count == 9)  // Yolo 层，layer 10 : 输入：24x24x512，输出：24x24x32（1x1）
+		{
+			for (int i = 1; i <= m * n; i++)  
+			{
+				// m=16, n=1, 128 convolution
+				cout << i << " ";
+				VLIW = VLIW_1024bit(i, m, n, k, count);
+				file << VLIW << ",";
+				add++;
+			}
+		}
+
+		cout << endl << endl;
 	}
 }
 
