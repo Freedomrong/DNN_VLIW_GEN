@@ -77,7 +77,9 @@ int main()
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_only7_0327_v2.coe");
 	// ofstream file("VLIW_768x768_504_len1024_test_address_0x80_inst_only7_0328_v3.coe");
 
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910_0328_v1.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910_0328_v1.coe");
+
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567891011_0328_v1.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
@@ -100,7 +102,7 @@ int main()
 	// for (count = 0; count < 7; count++)        // Layer 1
 	// for (count = 0; count < 8; count++)        // Layer 1
 
-	for (count = 0; count < 10; count++)        // Layer 1
+	for (count = 0; count < 11; count++)        // Layer 1
 	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];
@@ -221,7 +223,18 @@ int main()
 				add++;
 			}
 		}
-
+		// -------------------------------------
+		else if (count == 10)  // upsample层，layer 11 : 输入：24x24x256，输出：48x48x128（1x1）
+		{
+			for (int i = 1; i <= m * n; i++)  // m = 8, n=4
+			{
+				// m=16, n=1, 128 convolution
+				cout << i << " ";
+				VLIW = VLIW_1024bit(i, m, n, k, count);
+				file << VLIW << ",";
+				add++;
+			}
+		}
 		cout << endl << endl;
 	}
 }
