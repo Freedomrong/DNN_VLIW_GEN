@@ -95,18 +95,18 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// 新模型参数 - 768x768x1 输入, 共14层卷积 (0~13)
 	// Conv11拆分为Conv11a(处理Conv10输出128ch)和Conv11b(处理Conv4输出256ch)
 	// 【重要】使用输入优先模式 (input_tile = count/n)，和256x256模型一致
-	int filters_size[14] = { 1, 3, 3, 3,    3, 3, 3, 1,   3, 1, 1,     3,   3, 1 };
-	int original[14] = { 1, 16, 32, 64,    128, 256, 512, 1024,    256, 512, 256,    128, 256, 256 };
+	int filters_size[14] = { 1, 3, 3, 3,    3, 3, 3, 1,            3, 1, 1,          3,   1, 0 };
+	int original[14] = { 1, 16, 32, 64,    128, 256, 512, 1024,    256, 512, 256,    384, 256, 0 };
 	//                   C0  C1  C2  C3  C4   C5   C6   C7    C8   C9  C10 C11a C11b C12
-	int kstorge[14] =  { 768, 384, 192, 96,   48, 24, 24, 24,   24, 24, 24,    48, 48, 48 };
-	int result_back[14] = { 384, 192, 96, 48,  24, 24, 24, 24,  24, 24, 48,   48, 48, 48 };
+	int kstorge[14] =  { 768, 384, 192, 96,   48, 24, 24, 24,   24, 24, 24,    48, 48, 0 };
+	int result_back[14] = { 384, 192, 96, 48,  24, 24, 24, 24,  24, 24, 48,   48, 48, 0 };
 	// quantization = 数据1 + 数据2 - 数据3
 	//int quantization[14] = { 15, 16, 17, 16, 15, 15, 16, 15, 16, 17, 16, 16, 15, 18 };
 
 	int quantization[14] = { 15, 16, 17, 16, 
 		                     15, 15, 16, 15, 
 							 16, 17, 16, 
-							 16, 15, 18 };   // 倒数第三个16，不确定是怎么来的
+							 15, 18, 0 };   // 倒数第三个16，不确定是怎么来的
 
 	// ////////////////////////////////////////////////////////////////////////////////////////////
 	// // Layer1 (conv_num=1) slice helper
@@ -330,7 +330,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 		else if (count >= 33) { // 每次只读需要的数据
 			GlobalBuffer_DDR_enable = 1;
-			GlobalBuffer_DDR_source_address = 0xa7000000 + (long long)(count - 33) * 48 * 48 * 64;							//3x3的卷积核必须一次读入
+			// GlobalBuffer_DDR_source_address = 0xa7090000 + (long long)(count - 33) * 48 * 48 * 64;
+			GlobalBuffer_DDR_source_address = compute_result_first + (long long)(count - 33) * 48 * 48 * 64; //3x3的卷积核必须一次读入
 			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
 			GlobalBuffer_DDR_length = 48 * 48;  //per 64Bytes 384*31 
 		}
@@ -508,8 +509,33 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_length = 0;
 		}
 	}
-
-	
+	else if (conv_num == 11)
+	{
+		if (count % 12 == 1) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 48 * 48 * 4;  
+		}
+		else if (count % 12 == 5) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 4;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 48 * 48 * 4;
+		}
+		else if (count % 12 == 9) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 4 * 2;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 48 * 48 * 4;
+		}
+		else {
+			GlobalBuffer_DDR_enable = 0;
+			GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = 0;
+			GlobalBuffer_DDR_length = 0;
+		}
+	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//2.从GlobalBuffer中读fmap进入Compute
@@ -902,6 +928,68 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_source_address = GlobalBuffer_first + 24*24*64 * 15;
 			GlobalBuffer_length = 24*24;
 		}
+	}
+	else if (conv_num == 11) {
+		if (count % 12 == 1 || count % 12 == 5 || count % 12 == 9) {
+			GlobalBuffer_WaitMMU = 1;
+		}
+		else {
+			GlobalBuffer_WaitMMU = 0; // 输入图像在SRAM中，直接算下一条
+		}
+
+		if (count % 12 == 1) {
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 2) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 3) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 4) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 5) {
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 6) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 7) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 8) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 9) {
+			GlobalBuffer_source_address = GlobalBuffer_first ;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 10) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 11) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
+			GlobalBuffer_length = 48*48;
+		}
+		else if (count % 12 == 0) {
+			GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
+			GlobalBuffer_length = 48*48;
+		}
+		else {
+			GlobalBuffer_source_address = GlobalBuffer_first;
+			GlobalBuffer_length = 48*48;
+		}
+
 	}
 	// else if (conv_num == 8) {
 	// 	// ori code
@@ -1299,6 +1387,34 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			WeightCache_DDR_length = 0;
 		}
 	}
+	else if (conv_num == 11)
+	{
+		if (count >= 1 && count <= m*n) { // 8个为一组
+			const long long base_stride = 3 * 3 * 64;
+			const long long block_stride = base_stride * 256; // 组内步长
+			const long long group_stride = base_stride * 32;  // 组间步长
+
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first
+				+ block_stride * ((count - 1) % m)
+				+ group_stride * ((count - 1) / m);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 288; 
+		}
+		else {
+			WeightCache_DDR_enable = 0;
+			WeightCache_DDR_source_address = 0;
+			WeightCache_DDR_aim_address = 0;
+			WeightCache_DDR_length = 0;
+		}
+	}
+	else
+	{
+		WeightCache_DDR_enable = 0;
+		WeightCache_DDR_source_address = 0;
+		WeightCache_DDR_aim_address = 0;
+		WeightCache_DDR_length = 0;
+	}
 	
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1401,6 +1517,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
 		else { Psum_enable = 1; }
 	}
+	else if (conv_num == 11)
+	{
+		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
+		else { Psum_enable = 1; }
+	}
 	else
 	{
 		Psum_enable = 0;
@@ -1422,6 +1543,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		else { Psum_next = 0; }
 	}
 	else if (conv_num == 5 || conv_num == 6|| conv_num == 7 || conv_num == 8 || conv_num == 9 || conv_num == 10)
+	{
+		if (count % m == 0) { Psum_next = 1; } 
+		else { Psum_next = 0; }
+	}
+	else if (conv_num == 11)
 	{
 		if (count % m == 0) { Psum_next = 1; } 
 		else { Psum_next = 0; }
@@ -1713,6 +1839,17 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			else if (count == 128) {
 				Bias_source_address = Bias_addr_first + 15;
 			}
+		}
+		else {
+			Bias_enable = 0;
+			Bias_source_address = 0;
+		}
+	}
+	else if  (conv_num == 11)
+	{
+		if (count % 12 == 0) {
+			Bias_enable = 1;
+			Bias_source_address = Bias_addr_first + (count / 12 - 1);
 		}
 		else {
 			Bias_enable = 0;
@@ -2125,6 +2262,20 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Compute_Result_length = 0;
 		}
 	}
+	else if (conv_num == 11)
+	{
+		if (count % m == 0) {
+			int n = count / m - 1;
+			Compute_Result_enable = 1;
+			Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * n;
+			Compute_Result_length = 48 * 48;
+		}
+		else {
+			Compute_Result_enable = 0;
+			Compute_Result_source_address = 0;
+			Compute_Result_length = 0;
+		}
+	}
 
 	else
 	{
@@ -2136,6 +2287,22 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//8.Quantization
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// if (conv_num == 11) 
+	// {
+	// 	if (count%m >= 1 && count%m <= 4) {
+	// 		Global_CMD_Quantization_LeftOrRight = 1;
+	// 		Global_CMD_Quantization_length = quantization[conv_num];
+	// 	}
+	// 	else if (count%m >= 5 || count%m == 0) {
+	// 		Global_CMD_Quantization_LeftOrRight = 1;
+	// 		Global_CMD_Quantization_length = quantization[conv_num];
+	// 	}
+	// }
+	// else {
+	// 	Global_CMD_Quantization_LeftOrRight = 1;
+	// 	Global_CMD_Quantization_length = quantization[conv_num];
+	// }
+
 	Global_CMD_Quantization_LeftOrRight = 1;
 	Global_CMD_Quantization_length = quantization[conv_num];
 	
@@ -2227,6 +2394,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
 	}
+	else if (conv_num == 11)
+	{
+		Global_CMD_pooling = 0;
+		Global_CMD_pooling_length = 0;
+	}
 	else {
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
@@ -2237,19 +2409,6 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// Global_CMD_upsampling = 0;
 	if (conv_num == 10)
 	{
-		// if (count / n + 1 == m&& count%n != 0)
-		// {
-		// 	Global_CMD_upsampling = 1;
-		// }
-		// else if (count / n == m)
-		// {
-		// 	Global_CMD_upsampling = 1;
-		// }
-		// else
-		// {
-		// 	Global_CMD_upsampling = 0;
-		// }
-
 		if (count % 8 == 0) // count == 8, 16, ,,, , 128
 		{
 			Global_CMD_upsampling = 1;
@@ -2345,7 +2504,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Global_CMD_pad_type = 15;
 		}
 	}
-	else if (conv_num == 5 || conv_num == 6 || conv_num == 8)
+	else if (conv_num == 5 || conv_num == 6 || conv_num == 8 || conv_num == 11)
 	{
 		Global_CMD_pad = 1;
 		Global_CMD_pad_type = 15;
@@ -2488,6 +2647,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_width = 24;
 		Global_CMD_high = 24;
 	}
+	else if (conv_num == 11)
+	{
+		Global_CMD_width = 48;
+		Global_CMD_high = 48;
+	}
 	else {
 		Global_CMD_width = 0;
 		Global_CMD_high = 0;
@@ -2557,6 +2721,10 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
 	else if (conv_num == 7 || conv_num == 8 || conv_num == 9 || conv_num == 10)
+	{
+		Global_CMD_weight_rd_addr_cmd_base = 0;
+	}
+	else if (conv_num == 11)
 	{
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
@@ -2655,6 +2823,17 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Bias_module_enable = 0;
 		}
 	}
+	else if (conv_num == 11)
+	{
+		if (count % 12 == 0)
+		{
+			Bias_module_enable = 1;
+		}
+		else
+		{
+			Bias_module_enable = 0;
+		}
+	}
 	else
 	{
 		Bias_module_enable = 0;
@@ -2695,6 +2874,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		fl = 0;
 		fl_length = 0;
 	}
+	else if (conv_num == 11)
+	{
+		fl = fl_data;
+		fl_length = fl_length_data; // 因为两个刚好都是0，所以直接复用了。
+	}
 	else
 	{
 		fl = fl_data;
@@ -2733,7 +2917,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//19.RELU_NOT:conv9和conv13需要
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	if (conv_num == 9 || conv_num == 13)
+	if (conv_num == 9 || conv_num == 12)
 	{
 		if (Psum_next == 1)
 		{
@@ -2753,7 +2937,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Full instruction debug dump (only for conv_num == 5)
 	// if (conv_num == 6 && (count %16 == 0)) {
-	if (conv_num == 10 && (count <= 32)) {
+	if (conv_num == 11 && (count <= 32)) {
 		cout << "\n[INST DBG] conv_num=" << conv_num
 			 << " count=" << count
 			 << " m=" << m

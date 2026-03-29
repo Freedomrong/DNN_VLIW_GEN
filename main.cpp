@@ -17,11 +17,11 @@ int main()
 	// Conv11拆分为Conv11a(处理Conv10输出128ch)和Conv11b(处理Conv4输出256ch)
 	// Layer: 0:768->384, 1:384->192, 2:192->96, 3:96->48, 4:48->24, 5:24->24(stride1), 
 	//        6:24, 7:24(1x1), 8:24, 9:24(yolo), 10:24(1x1), 11a:48(route1), 11b:48(route2), 12:48(yolo)
-	int kstorge[14] = { 768, 384, 192, 96, 48, 24, 24, 24, 24, 24, 24, 48, 48, 48 };
-	int original[14] = { 1, 16, 32, 64, 128, 256, 512, 1024, 256, 512, 256, 128, 256, 256 };  // 输入通道
+	int kstorge[14] =  { 768, 384, 192, 96,    48, 24, 24, 24,         24, 24, 24,       48, 48, 0 };
+	int original[14] = { 1, 16, 32, 64,        128, 256, 512, 1024,    256, 512, 256,    384, 256, 0 };  // 输入通道
 	//                   C0  C1  C2  C3  C4   C5   C6   C7    C8   C9  C10 C11a C11b C12
-	int filters[14] = { 16, 32, 64, 128, 256, 512, 1024, 256, 512, 21, 128, 256, 256, 21 };    // 输出通道
-	int filters_size[14] = { 1, 3, 3, 3, 3, 3, 3, 1, 3, 1, 1, 3, 3, 1 };  // 卷积核大小
+	int filters[14] =  { 16, 32, 64, 128,      256, 512, 1024, 256,    512, 21, 128,     256, 21 , 0 };    // 输出通道
+	int filters_size[14] = { 1, 3, 3, 3,       3, 3, 3, 1,             3, 1, 1,          3, 1, 0 };  // 卷积核大小
     //                       0，1，2，3，4， 5，6，7，8， 9，10，11a，11b，12
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x00_v1.coe");
 
@@ -79,7 +79,10 @@ int main()
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910_0328_v1.coe");
 
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567891011_0328_v1.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567891011_0328_v1.coe");
+
+
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789101112_0328_v3.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
@@ -102,7 +105,7 @@ int main()
 	// for (count = 0; count < 7; count++)        // Layer 1
 	// for (count = 0; count < 8; count++)        // Layer 1
 
-	for (count = 0; count < 11; count++)        // Layer 1
+	for (count = 0; count < 12; count++)        // Layer 1
 	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];
@@ -229,6 +232,17 @@ int main()
 			for (int i = 1; i <= m * n; i++)  // m = 8, n=4
 			{
 				// m=16, n=1, 128 convolution
+				cout << i << " ";
+				VLIW = VLIW_1024bit(i, m, n, k, count);
+				file << VLIW << ",";
+				add++;
+			}
+		}
+		// -------------------------------------
+		else if (count == 11)  // concat层，layer 11 : 输入：48x48x128 and 48x48x256，输出：48x48x256（3x3）
+		{
+			for (int i = 1; i <= m * n; i++)  // m = 384 / 32 = 12, n=256/32=8
+			{
 				cout << i << " ";
 				VLIW = VLIW_1024bit(i, m, n, k, count);
 				file << VLIW << ",";
