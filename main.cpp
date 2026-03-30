@@ -82,7 +82,9 @@ int main()
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v1234567891011_0328_v1.coe");
 
 
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789101112_0328_v3.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789101112_0328_v3.coe");
+
+	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910111213_0328_v8.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
@@ -105,7 +107,8 @@ int main()
 	// for (count = 0; count < 7; count++)        // Layer 1
 	// for (count = 0; count < 8; count++)        // Layer 1
 
-	for (count = 0; count < 12; count++)        // Layer 1
+	// for (count = 0; count < 12; count++)        // Layer 1
+	for (count = 0; count < 13; count++)        // Layer 1
 	// for (count = 6; count < 7; count++)        // Layer 1
 	{
 		int k = kstorge[count];
@@ -242,6 +245,18 @@ int main()
 		else if (count == 11)  // concat层，layer 11 : 输入：48x48x128 and 48x48x256，输出：48x48x256（3x3）
 		{
 			for (int i = 1; i <= m * n; i++)  // m = 384 / 32 = 12, n=256/32=8
+			{
+				cout << i << " ";
+				VLIW = VLIW_1024bit(i, m, n, k, count);
+				file << VLIW << ",";
+				add++;
+			}
+		}
+
+		// -------------------------------------
+		else if (count == 12)  // yolo层，layer 12 : 输入：48x48x256，输出：48x48x32（1x1）
+		{
+			for (int i = 1; i <= m * n * 2; i++)  // m = 256 / 32 = 8, n=32/32=1
 			{
 				cout << i << " ";
 				VLIW = VLIW_1024bit(i, m, n, k, count);

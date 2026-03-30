@@ -536,6 +536,184 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			GlobalBuffer_DDR_length = 0;
 		}
 	}
+	else if (conv_num == 12)
+	{
+		// ori plan
+		// if (count % 8 == 1) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48 * 4;  
+		// }
+		// else if (count % 8 == 5) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 4;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48 * 4;
+		// }
+		// else {
+		// 	GlobalBuffer_DDR_enable = 0;
+		// 	GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = 0;
+		// 	GlobalBuffer_DDR_length = 0;
+		// }
+
+		// ------------------------------------------------
+		// if (count % 8 == 1) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;  
+		// }
+		// else if (count % 8 == 2) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;  
+		// }
+		// else if (count % 8 == 3) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 2;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;  
+		// }
+		// else if (count % 8 == 4) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 3;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;  
+		// }
+		// else if (count % 8 == 5) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 4;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;
+		// }
+		// else if (count % 8 == 6) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 5;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;
+		// }
+		// else if (count % 8 == 7) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 6;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;
+		// }
+		// else if (count % 8 == 0) {
+		// 	GlobalBuffer_DDR_enable = 1;
+		// 	GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 7;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+		// 	GlobalBuffer_DDR_length = 48 * 48;
+		// }
+		// else {
+		// 	GlobalBuffer_DDR_enable = 0;
+		// 	GlobalBuffer_DDR_source_address = 0;							//3x3的卷积核必须一次读入
+		// 	GlobalBuffer_DDR_aim_address = 0;
+		// 	GlobalBuffer_DDR_length = 0;
+		// }
+
+		// 上述设计，fifo会溢出。
+		if (count == 1) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first;
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;  
+		}
+		else if (count == 2) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 3) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 2;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;  
+		}
+		else if (count == 4) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 3;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;  
+		}
+		else if (count == 5) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 4;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 6) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 5;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 7) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 6;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 8) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 48 * 48 * 64 * 7;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 9) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = DDR_Globalbuffer_first + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 10) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 11) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address =  (DDR_Globalbuffer_first + 48 * 48 * 64 * 2) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 12) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64 * 3) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 13) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64 * 4) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 14) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64 * 5) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 15) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64 * 6) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		else if (count == 16) {
+			GlobalBuffer_DDR_enable = 1;
+			GlobalBuffer_DDR_source_address = (DDR_Globalbuffer_first + 48 * 48 * 64 * 7) + 24 * 48 * 64;							//3x3的卷积核必须一次读入
+			GlobalBuffer_DDR_aim_address = GlobalBuffer_first;
+			GlobalBuffer_DDR_length = 24 * 48;
+		}
+		
+	}
+
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//2.从GlobalBuffer中读fmap进入Compute
@@ -991,6 +1169,62 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		}
 
 	}
+	else if (conv_num == 12) 
+	{
+		// ori plan
+		// if (count % 8 == 1 || count % 8 == 5) {
+		// 	GlobalBuffer_WaitMMU = 1;
+		// }
+		// else {
+		// 	GlobalBuffer_WaitMMU = 0; // 输入图像在SRAM中，直接算下一条
+		// }
+		
+		// if (count % 8 == 1) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 2) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 3) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 4) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 5) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first ;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 6) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 7) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 2;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else if (count % 8 == 0) {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first + 48*48*64 * 3;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+		// else {
+		// 	GlobalBuffer_source_address = GlobalBuffer_first ;
+		// 	GlobalBuffer_length = 48*48;
+		// }
+
+		// GlobalBuffer_WaitMMU = 1;
+		// GlobalBuffer_source_address = GlobalBuffer_first;
+		// GlobalBuffer_length = 48*48;
+
+
+		GlobalBuffer_WaitMMU = 1;
+		GlobalBuffer_source_address = GlobalBuffer_first;
+		GlobalBuffer_length = 24*48;
+	}
 	// else if (conv_num == 8) {
 	// 	// ori code
 	// 	if (count == 1) {
@@ -1194,8 +1428,6 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			WeightCache_DDR_aim_address = WeightCache_first;
 			WeightCache_DDR_length = 288; // 3*3*128*2
 		}
-
-
 	}
 	else if (conv_num == 4) // n=4 or n=8
 	{
@@ -1408,6 +1640,42 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			WeightCache_DDR_length = 0;
 		}
 	}
+	else if (conv_num == 12) // conv1x1卷积核, n=8
+	{
+		if (count >= 1 && count <= m*n)  
+		{
+			const long long base_stride = 1 * 1 * 64;
+			const long long block_stride = base_stride * 32; // 组内步长
+			const long long group_stride = base_stride * 32;  // 组间步长
+
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first
+				+ block_stride * ((count - 1) % m) // m = 32
+				+ group_stride * ((count - 1) / m);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 32; 
+		}
+		else if (count > m*n)
+		{
+			const long long base_stride = 1 * 1 * 64;
+			const long long block_stride = base_stride * 32; // 组内步长
+			const long long group_stride = base_stride * 32;  // 组间步长
+
+			WeightCache_DDR_enable = 1;
+			WeightCache_DDR_source_address = DDR_WeightCacheBuffer_first
+				+ block_stride * (((count-8) - 1) % m) // m = 32
+				+ group_stride * (((count-8) - 1) / m);
+			WeightCache_DDR_aim_address = WeightCache_first;
+			WeightCache_DDR_length = 32; 
+		}
+		else
+		{
+			WeightCache_DDR_enable = 0;
+			WeightCache_DDR_source_address = 0;
+			WeightCache_DDR_aim_address = 0;
+			WeightCache_DDR_length = 0;
+		}
+	}
 	else
 	{
 		WeightCache_DDR_enable = 0;
@@ -1517,7 +1785,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
 		else { Psum_enable = 1; }
 	}
-	else if (conv_num == 11)
+	else if (conv_num == 11 || conv_num == 12)
 	{
 		if (count % m == 1) { Psum_enable = 0; } //当 count 为 1, 9, 17... 时，说明正在计算每一个输出组的第一个输入块。新输入，不累加
 		else { Psum_enable = 1; }
@@ -1548,6 +1816,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		else { Psum_next = 0; }
 	}
 	else if (conv_num == 11)
+	{
+		if (count % m == 0) { Psum_next = 1; } 
+		else { Psum_next = 0; }
+	}
+	else if (conv_num == 12)
 	{
 		if (count % m == 0) { Psum_next = 1; } 
 		else { Psum_next = 0; }
@@ -1850,6 +2123,17 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		if (count % 12 == 0) {
 			Bias_enable = 1;
 			Bias_source_address = Bias_addr_first + (count / 12 - 1);
+		}
+		else {
+			Bias_enable = 0;
+			Bias_source_address = 0;
+		}
+	}
+	else if  (conv_num == 12)
+	{
+		if (count % m == 0) {
+			Bias_enable = 1;
+			Bias_source_address = Bias_addr_first;
 		}
 		else {
 			Bias_enable = 0;
@@ -2276,6 +2560,35 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Compute_Result_length = 0;
 		}
 	}
+	else if (conv_num == 12)
+	{
+		// if (count % m == 0) {
+		// 	int n = count / m - 1;
+		// 	Compute_Result_enable = 1;
+		// 	Compute_Result_source_address = compute_result_first + 48 * 48 * 64 * n;
+		// 	Compute_Result_length = 48 * 48;
+		// }
+		// else {
+		// 	Compute_Result_enable = 0;
+		// 	Compute_Result_source_address = 0;
+		// 	Compute_Result_length = 0;
+		// }
+		if (count == 8){
+			Compute_Result_enable = 1;
+			Compute_Result_source_address = compute_result_first; 
+			Compute_Result_length = 24*48; // 24*48
+		}
+		else if (count == 16) {
+			Compute_Result_enable = 1;
+			Compute_Result_source_address = compute_result_first + 24 * 48 * 64; 
+			Compute_Result_length = 24*48; // 24*48
+		}
+		else {
+			Compute_Result_enable = 0;
+			Compute_Result_source_address = 0;
+			Compute_Result_length = 0;
+		}
+	}
 
 	else
 	{
@@ -2394,7 +2707,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
 	}
-	else if (conv_num == 11)
+	else if (conv_num == 11 || conv_num == 12)
 	{
 		Global_CMD_pooling = 0;
 		Global_CMD_pooling_length = 0;
@@ -2509,7 +2822,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_pad = 1;
 		Global_CMD_pad_type = 15;
 	}
-	else if (conv_num == 7 || conv_num == 9 || conv_num == 10)
+	else if (conv_num == 7 || conv_num == 9 || conv_num == 10 || conv_num == 12)
 	{
 		Global_CMD_pad = 0;
 		Global_CMD_pad_type = 0;
@@ -2652,6 +2965,11 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		Global_CMD_width = 48;
 		Global_CMD_high = 48;
 	}
+	else if (conv_num == 12)
+	{
+		Global_CMD_width = 48;
+		Global_CMD_high = 24;
+	}
 	else {
 		Global_CMD_width = 0;
 		Global_CMD_high = 0;
@@ -2724,7 +3042,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	{
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
-	else if (conv_num == 11)
+	else if (conv_num == 11 || conv_num == 12)
 	{
 		Global_CMD_weight_rd_addr_cmd_base = 0;
 	}
@@ -2834,6 +3152,17 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 			Bias_module_enable = 0;
 		}
 	}
+	else if (conv_num == 12)
+	{
+		if (count % m == 0)
+		{
+			Bias_module_enable = 1;
+		}
+		else
+		{
+			Bias_module_enable = 0;
+		}
+	}
 	else
 	{
 		Bias_module_enable = 0;
@@ -2896,12 +3225,13 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// }
 	// else 
 	
-	// if (conv_num == 2 && count == 8) {
+	// if (conv_num == 12 && count == 8) {
 	// 	PCIE_START = 1;
 	// }
 	// else {	
 	// 	PCIE_START = 0;
 	// }
+	PCIE_START = 1;
 
 	// if (conv_num == 1 && count == 13) {
 	// if (conv_num == 3 && count == 2) {
@@ -2910,7 +3240,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// else {	
 	// 	PCIE_START = 0;
 	// }
-	PCIE_START = 1;
+	// PCIE_START = 1;
 
 	// PCIE_START = 1;
 
@@ -2937,7 +3267,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Full instruction debug dump (only for conv_num == 5)
 	// if (conv_num == 6 && (count %16 == 0)) {
-	if (conv_num == 11 && (count <= 32)) {
+	if (conv_num == 12 && (count <= 32)) {
 		cout << "\n[INST DBG] conv_num=" << conv_num
 			 << " count=" << count
 			 << " m=" << m

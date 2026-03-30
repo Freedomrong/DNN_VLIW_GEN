@@ -76,6 +76,10 @@ long long  Count_DDR_Globalbuffer_first(int count)
 	{
 		GlobalBuffer_DDR_source_address = 0x0A7000000;
 	}
+	else if (count == 12)
+	{
+		GlobalBuffer_DDR_source_address = 0x0A8000000;
+	}
 	else
 	{
 		GlobalBuffer_DDR_source_address = 0x0A0000000;
@@ -115,10 +119,7 @@ int Count_Bias_addr_first(int count)
 	int Bias_addr_first = 0;
 	for (int i = 0; i < count; i++)
 	{
-		if (i != 11)
-		{
-			Bias_addr_first += (filters[i]%32 == 0?filters[i]/32:filters[i]/32+1);//��ʮһ���������Ҫbias����˲�����bias��ַ����
-		}
+		Bias_addr_first += (filters[i]%32 == 0?filters[i]/32:filters[i]/32+1);
 	}
 	return Bias_addr_first;
 
@@ -212,6 +213,10 @@ long long Count_compute_result_first(int count)
 	else if (count == 11)
 	{
 		compute_rseult_first = 0x0A8000000;
+	}
+	else if (count == 12)
+	{
+		compute_rseult_first = 0x0A3000000;  // result save
 	}
 
 	return compute_rseult_first;
