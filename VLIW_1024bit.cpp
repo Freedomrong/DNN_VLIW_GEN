@@ -73,15 +73,17 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	//long long DDR_Globalbuffer_first = 0x0FF000000;
 	long long DDR_WeightCacheBuffer_first = Count_DDR_WeightCacheBuffer_first(conv_num);////////������ȡ
 	long long GlobalBuffer_first = Count_GlobalBuffer_first(conv_num);
-	// long long WeightCache_first = 0x100100000;
+	
+	long long WeightCache_first = 0x100100000;
 	// long long PrePsumBuffer_first = 0x102000000;
 	// long long BiasBuffer_first = 0x106000000;
 	// long long quiteBuffer_first = 0x004000000;
 
-	long long WeightCache_first = 0x0c2000000;
+	// long long WeightCache_first = 0x0c2000000;
 	// long long PrePsumBuffer_first = 0x0c4000000;
 	// long long BiasBuffer_first = 0x0c6000000;
 	// long long quiteBuffer_first = 0x0c8000000;
+
 
 	int fl_data = compute_fl(conv_num);
 	int fl_length_data = compute_fl_length(conv_num);
@@ -2323,7 +2325,8 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 		{
 			Compute_Result_enable = 1;
 			// Compute_Result_source_address = 0xc0000000 + 0x80000 + (count - 33) * 24 * 24 * 64; 
-			Compute_Result_source_address = 0x0A9000000 + (count - 33) * 24 * 24 * 64; 
+			// Compute_Result_source_address = 0x0A9000000 + (count - 33) * 24 * 24 * 64;   // Micro blaze use logic address
+			Compute_Result_source_address = 0x009000000 + (count - 33) * 24 * 24 * 64;      // 504 fpga use address	
 			Compute_Result_length = 24*24; // 48*48
 			
 			// int pool_out_step = count - 32; 
@@ -3225,13 +3228,13 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// }
 	// else 
 	
-	// if (conv_num == 12 && count == 8) {
-	// 	PCIE_START = 1;
-	// }
-	// else {	
-	// 	PCIE_START = 0;
-	// }
-	PCIE_START = 1;
+	if (conv_num == 12 && count == 16) {
+		PCIE_START = 1;
+	}
+	else {	
+		PCIE_START = 0;
+	}
+	// PCIE_START = 1;
 
 	// if (conv_num == 1 && count == 13) {
 	// if (conv_num == 3 && count == 2) {
@@ -3268,6 +3271,7 @@ std::string VLIW_1024bit(int count, int m, int n, int k, int conv_num)
 	// Full instruction debug dump (only for conv_num == 5)
 	// if (conv_num == 6 && (count %16 == 0)) {
 	if (conv_num == 12 && (count <= 32)) {
+	// if (conv_num == 0 && (count <= 32)) {
 		cout << "\n[INST DBG] conv_num=" << conv_num
 			 << " count=" << count
 			 << " m=" << m

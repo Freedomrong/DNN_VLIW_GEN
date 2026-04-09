@@ -29,60 +29,60 @@ long long  Count_DDR_Globalbuffer_first(int count)
 	long long GlobalBuffer_DDR_source_address;
 	if (count == 0)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A0000000;
+		GlobalBuffer_DDR_source_address = 0x000000000;
 	}
 	else if (count == 1)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A3000000;
+		GlobalBuffer_DDR_source_address = 0x003000000;
 		//GlobalBuffer_DDR_source_address = 0x0FF000000;
 	}
 	else if (count == 2)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A4000000;
+		GlobalBuffer_DDR_source_address = 0x004000000;
 	}
 	else if (count == 3)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A5000000;
+		GlobalBuffer_DDR_source_address = 0x005000000;
 	}
     else if (count == 4)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A6000000;
+		GlobalBuffer_DDR_source_address = 0x006000000;
 	}
 	else if (count == 5)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A9000000;
+		GlobalBuffer_DDR_source_address = 0x009000000;
 	}
 	else if (count == 6)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A8000000;
+		GlobalBuffer_DDR_source_address = 0x008000000;
 	}
 	else if (count == 7)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A3000000;
+		GlobalBuffer_DDR_source_address = 0x003000000;
 	}
 	else if (count == 8)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A4000000;
+		GlobalBuffer_DDR_source_address = 0x004000000;
 	}
 	else if (count == 9)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A5000000;
+		GlobalBuffer_DDR_source_address = 0x005000000;
 	}
 	else if (count == 10) 
 	{
-		GlobalBuffer_DDR_source_address = 0x0A4000000;
+		GlobalBuffer_DDR_source_address = 0x004000000;
 	}
 	else if (count == 11)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A7000000;
+		GlobalBuffer_DDR_source_address = 0x007000000;
 	}
 	else if (count == 12)
 	{
-		GlobalBuffer_DDR_source_address = 0x0A8000000;
+		GlobalBuffer_DDR_source_address = 0x008000000;
 	}
 	else
 	{
-		GlobalBuffer_DDR_source_address = 0x0A0000000;
+		GlobalBuffer_DDR_source_address = 0x000000000;
 	}
 	
 	return GlobalBuffer_DDR_source_address;
@@ -93,11 +93,11 @@ long long Count_GlobalBuffer_first(int count)
 	long long GlobalBuffer_first = 0;
 	if (count == 0 || count == 1 || count == 2 || count == 3)
 	{
-		GlobalBuffer_first = 0x0c0000000;
+		GlobalBuffer_first = 0x100000000;
 	}
 	else
 	{
-		GlobalBuffer_first = 0x0c0000000;
+		GlobalBuffer_first = 0x100000000;
 	}
 
 	return GlobalBuffer_first;
@@ -105,7 +105,8 @@ long long Count_GlobalBuffer_first(int count)
 
 long long Count_DDR_WeightCacheBuffer_first(int count)
 {
-	long long DDR_WeightCacheBuffer_first = 0x091000000;
+	// long long DDR_WeightCacheBuffer_first = 0x091000000;
+	long long DDR_WeightCacheBuffer_first = 0x00c000000; // 原来的需要修改，不然存不下
 	for (int i = 0; i < count; i++)
 	{
 		DDR_WeightCacheBuffer_first += filters_size[i]*filters_size[i]*2*original[i]*filters[i];
@@ -168,55 +169,55 @@ long long Count_compute_result_first(int count)
 	// }
 	if (count == 0)
 	{
-		compute_rseult_first = 0x0A3000000;
+		compute_rseult_first = 0x003000000;
 	}
 	else if (count == 1)
 	{
-		compute_rseult_first = 0x0A4000000;
+		compute_rseult_first = 0x004000000;
 	}
 	else if (count == 2)
 	{
-		compute_rseult_first = 0x0A5000000;
+		compute_rseult_first = 0x005000000;
 	}
 	else if (count == 3)
 	{
-		compute_rseult_first = 0x0A6000000;
+		compute_rseult_first = 0x006000000;
 	}
 	else if (count == 4)
 	{
-		compute_rseult_first = 0x0A7090000;
+		compute_rseult_first = 0x007090000;
 	}
 	else if (count == 5)
 	{
-		compute_rseult_first = 0x0A8000000;
+		compute_rseult_first = 0x008000000;
 	}
 	else if (count == 6)
 	{
-		compute_rseult_first = 0x0A3000000;
+		compute_rseult_first = 0x003000000;
 	}
 	else if (count == 7)
 	{
-		compute_rseult_first = 0x0A4000000;  // result save
+		compute_rseult_first = 0x004000000;  // result save
 	}
 	else if (count == 8)
 	{
-		compute_rseult_first = 0x0A5000000;
+		compute_rseult_first = 0x005000000;
 	}
 	else if (count == 9)
 	{
-		compute_rseult_first = 0x0A6000000;
+		compute_rseult_first = 0x006000000;
 	}
 	else if (count == 10)
 	{
-		compute_rseult_first = 0x0A7000000;
+		compute_rseult_first = 0x007000000;
 	}
 	else if (count == 11)
 	{
-		compute_rseult_first = 0x0A8000000;
+		compute_rseult_first = 0x008000000;
 	}
 	else if (count == 12)
 	{
-		compute_rseult_first = 0x0A3000000;  // result save
+		compute_rseult_first = 0x003000000;  // result save
 	}
 
 	return compute_rseult_first;

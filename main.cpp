@@ -84,7 +84,10 @@ int main()
 
 	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v123456789101112_0328_v3.coe");
 
-	ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910111213_0328_v8.coe");
+	// ofstream file("VLIW_768x768_504_0305_len1024_test_address_0x80_inst_v12345678910111213_0328_v8.coe");
+
+	// ofstream file("VLIW_768x768_504fpga_0330_len1024_inst_v12345678910111213_v2.coe");
+	ofstream file("VLIW_768x768_504fpga_0330_len1024_inst_v12345678910111213_v4.coe");
 	// ----------------------only
 
 	// 768x768模型各层指令数 (14层)
